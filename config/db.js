@@ -1,13 +1,18 @@
 const mysql = require("mysql2");
 require("dotenv").config();
 
-// 🚀 SUPPORT BOTH LOCAL + RENDER (BEST PRACTICE)
 let pool;
 
+// 🚀 PRODUCTION (Render + Aiven)
 if (process.env.DATABASE_URL) {
-  // 🔥 PRODUCTION (Render + Aiven)
+  const url = new URL(process.env.DATABASE_URL);
+
   pool = mysql.createPool({
-    uri: process.env.DATABASE_URL,
+    host: url.hostname,
+    user: url.username,
+    password: url.password,
+    database: url.pathname.replace("/", ""),
+    port: url.port || 3306,
 
     waitForConnections: true,
     connectionLimit: 10,
@@ -17,6 +22,7 @@ if (process.env.DATABASE_URL) {
       rejectUnauthorized: false
     }
   });
+
 } else {
   // 🧪 LOCAL DEVELOPMENT
   pool = mysql.createPool({
@@ -32,7 +38,7 @@ if (process.env.DATABASE_URL) {
   });
 }
 
-// 🔥 PROMISE SUPPORT (async/await)
+// 🔥 PROMISE SUPPORT
 const db = pool.promise();
 
 // 🧪 TEST CONNECTION

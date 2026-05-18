@@ -3,7 +3,7 @@ require("dotenv").config();
 
 let pool;
 
-// 🚀 PRODUCTION (Render + Aiven)
+// 🚀 PRODUCTION (Render + Railway MySQL)
 if (process.env.DATABASE_URL) {
   const url = new URL(process.env.DATABASE_URL);
 
@@ -12,7 +12,7 @@ if (process.env.DATABASE_URL) {
     user: url.username,
     password: url.password,
     database: url.pathname.replace("/", ""),
-    port: url.port,
+    port: url.port ? Number(url.port) : 3306, // ✅ FIXED LINE
 
     waitForConnections: true,
     connectionLimit: 10,
@@ -30,7 +30,7 @@ if (process.env.DATABASE_URL) {
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    port: process.env.DB_PORT,
+    port: Number(process.env.DB_PORT || 3306), // ✅ FIXED LINE
 
     waitForConnections: true,
     connectionLimit: 10,
@@ -42,13 +42,13 @@ if (process.env.DATABASE_URL) {
 const db = pool.promise();
 
 // 🧪 TEST CONNECTION
-db.getConnection((err, connection) => {
-  if (err) {
-    console.error("❌ DB CONNECTION FAILED:", err.message);
-  } else {
+db.getConnection()
+  .then((connection) => {
     console.log("✅ DATABASE CONNECTED SUCCESSFULLY");
     connection.release();
-  }
-});
+  })
+  .catch((err) => {
+    console.error("❌ DB CONNECTION FAILED:", err.message);
+  });
 
 module.exports = db;
